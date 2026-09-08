@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'exam_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +63,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _openExamDetails(Map<String, dynamic> exam) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ExamPage(examData: exam),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Separate exams based on isFree property (simulated logic for now based on db fields)
@@ -91,7 +101,7 @@ class _HomePageState extends State<HomePage> {
             _buildSectionTitle('দৈনিক সংবাদ'),
             _buildHorizontalScrollBox(
               children: [
-                _buildCard('সংবাদ ১', 'আজকের আপডেট...'),
+                _buildCard('সংবাদ ১', 'আজকের আপডেট...', onTap: () {}),
               ],
             ),
             const SizedBox(height: 24),
@@ -104,7 +114,8 @@ class _HomePageState extends State<HomePage> {
                 return _buildCard(
                   exam['title'] ?? 'অজানা এক্সাম', 
                   exam['course'] ?? 'কোর্স', 
-                  color: Colors.indigo.shade50
+                  color: Colors.indigo.shade50,
+                  onTap: () => _openExamDetails(exam as Map<String, dynamic>),
                 );
               }).toList(),
             ),
@@ -118,7 +129,8 @@ class _HomePageState extends State<HomePage> {
                 return _buildCard(
                   exam['title'] ?? 'ফ্রি এক্সাম', 
                   exam['course'] ?? 'যেকোনো সময় দিন', 
-                  color: Colors.green.shade50
+                  color: Colors.green.shade50,
+                  onTap: () => _openExamDetails(exam as Map<String, dynamic>),
                 );
               }).toList(),
             ),
@@ -164,31 +176,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCard(String title, String subtitle, {Color? color}) {
-    return Container(
-      width: 250,
-      margin: const EdgeInsets.only(right: 12.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: color ?? Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 2, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(color: Colors.grey.shade700, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
-        ],
+  Widget _buildCard(String title, String subtitle, {Color? color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 250,
+        margin: const EdgeInsets.only(right: 12.0),
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: color ?? Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 8),
+            Text(subtitle, style: TextStyle(color: Colors.grey.shade700, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
       ),
     );
   }
