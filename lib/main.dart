@@ -38,8 +38,36 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<dynamic> allExams = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final response = await Supabase.instance.client.from('exams').select('*');
+      setState(() {
+        allExams = response as List<dynamic>;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching data: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Separate exams based on isFree property (simulated logic for now based on db fields)
+    final freeExams = allExams.where((e) => e['isFree'] == true).toList();
+    final liveExams = allExams.where((e) => e['isFree'] != true).toList(); // Paid/Live exams
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('BCS One (আরোহণ)', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -48,43 +76,55 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {
-              // TODO: Open Student Portal / Login
-            },
+            onPressed: () {},
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isLoading 
+        ? const Center(child: CircularProgressIndicator()) 
+        : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Daily News Section
+            // Daily News Section (Still static for now)
             _buildSectionTitle('দৈনিক সংবাদ'),
             _buildHorizontalScrollBox(
               children: [
                 _buildCard('সংবাদ ১', 'আজকের আপডেট...'),
-                _buildCard('সংবাদ ২', 'গুরুত্বপূর্ণ খবর...'),
               ],
             ),
             const SizedBox(height: 24),
 
-            // Live Exams Box
-            _buildSectionTitle('লাইভ এক্সাম'),
-            _buildCard('বিসিএস প্রিলিমিনারি লাইভ মডেল টেস্ট', 'সময়: রাত ৯টা', color: Colors.indigo.shade50),
+            // Live Exams Box (From Database)
+            _buildSectionTitle('লাইভ এক্সাম (${liveExams.length})'),
+            if (liveExams.isEmpty) const Text('এই মুহূর্তে কোনো লাইভ এক্সাম নেই।') else
+            _buildHorizontalScrollBox(
+              children: liveExams.map((exam) {
+                return _buildCard(
+                  exam['title'] ?? 'অজানা এক্সাম', 
+                  exam['course'] ?? 'কোর্স', 
+                  color: Colors.indigo.shade50
+                );
+              }).toList(),
+            ),
             const SizedBox(height: 24),
 
-            // Free Model Tests Box
-            _buildSectionTitle('ফ্রি মডেল টেস্ট'),
-            _buildCard('ফ্রি এক্সাম ১: সাধারণ জ্ঞান', 'যেকোনো সময় দিন', color: Colors.green.shade50),
+            // Free Model Tests Box (From Database)
+            _buildSectionTitle('ফ্রি মডেল টেস্ট (${freeExams.length})'),
+             if (freeExams.isEmpty) const Text('কোনো ফ্রি এক্সাম পাওয়া যায়নি।') else
+            _buildHorizontalScrollBox(
+              children: freeExams.map((exam) {
+                return _buildCard(
+                  exam['title'] ?? 'ফ্রি এক্সাম', 
+                  exam['course'] ?? 'যেকোনো সময় দিন', 
+                  color: Colors.green.shade50
+                );
+              }).toList(),
+            ),
             const SizedBox(height: 24),
 
-            // Upcoming Exams Box
-            _buildSectionTitle('আসন্ন লাইভ এক্সাম'),
-            _buildCard('বাংলা ব্যাকরণ স্পেশাল', 'আগামীকাল সন্ধ্যা ৭টা', color: Colors.orange.shade50),
-            const SizedBox(height: 24),
-
-            // Course Card Grid
+            // Course Card Grid (Static for now)
             _buildSectionTitle('কোর্স ডিরেক্টরি'),
             GridView.count(
               shrinkWrap: true,
@@ -96,8 +136,6 @@ class _HomePageState extends State<HomePage> {
               children: [
                 _buildCourseCard('সাধারণ কোর্স'),
                 _buildCourseCard('বিসিএস প্রিলি'),
-                _buildCourseCard('প্রাইমারি শিক্ষক নিয়োগ'),
-                _buildCourseCard('ব্যাংক জব'),
               ],
             ),
           ],
@@ -149,7 +187,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
+          Text(subtitle, style: TextStyle(color: Colors.grey.shade700, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
     );
