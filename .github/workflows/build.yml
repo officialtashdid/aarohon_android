@@ -27,7 +27,7 @@ jobs:
           channel: 'stable'
 
       - name: Generate Platform Folders
-        run: flutter create .
+        run: flutter create --platforms=android --org com.aarohon.bcsone .
 
       - name: Get Dependencies
         run: flutter pub get
