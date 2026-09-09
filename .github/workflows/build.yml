@@ -26,6 +26,9 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
+      - name: Generate Platform Folders
+        run: flutter create .
+
       - name: Get Dependencies
         run: flutter pub get
 
