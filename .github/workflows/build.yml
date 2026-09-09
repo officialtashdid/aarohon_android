@@ -29,6 +29,11 @@ jobs:
       - name: Generate Platform Folders
         run: flutter create --platforms=android --org com.aarohon.bcsone .
 
+      - name: Patch Kotlin Version
+        run: |
+          sed -i "s/ext.kotlin_version = .*/ext.kotlin_version = '1.9.22'/g" android/build.gradle || true
+          sed -i 's/id "org.jetbrains.kotlin.android" version ".*"/id "org.jetbrains.kotlin.android" version "1.9.22"/g' android/settings.gradle || true
+
       - name: Get Dependencies
         run: flutter pub get
 
