@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart';
+import 'quiz_page.dart';
 
 class ExamPage extends StatelessWidget {
   final Map<String, dynamic> examData;
@@ -78,13 +80,19 @@ class ExamPage extends StatelessWidget {
                 ),
                 onPressed: () {
                   if (isFree) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('পরীক্ষা শুরু হচ্ছে...')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QuizPage(examData: examData),
+                      ),
                     );
-                    // TODO: Load actual questions and start exam timer
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('আপনাকে প্রথমে লগইন করে কোর্সটি কিনতে হবে।')),
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
                     );
                   }
                 },

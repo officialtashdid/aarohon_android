@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'exam_page.dart';
+import 'login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,7 +87,12 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
           ),
         ],
       ),
