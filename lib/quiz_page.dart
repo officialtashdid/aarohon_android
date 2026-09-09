@@ -16,24 +16,55 @@ class _QuizPageState extends State<QuizPage> {
   int currentQuestionIndex = 0;
   String? selectedOption;
 
-  // Dummy questions for UI testing (will fetch from Supabase later)
-  final List<Map<String, dynamic>> questions = [
-    {
-      'q': 'বাংলাদেশের রাজধানী কোথায়?',
-      'opts': ['ঢাকা', 'চট্টগ্রাম', 'রাজশাহী', 'সিলেট'],
-    },
-    {
-      'q': 'বাংলাদেশের জাতীয় ফুল কী?',
-      'opts': ['গোলাপ', 'শাপলা', 'জবা', 'পদ্ম'],
-    }
-  ];
+  List<Map<String, dynamic>> questions = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     // Default 10 mins if not provided
     remainingSeconds = (widget.examData['timerMinutes'] ?? 10) * 60;
-    _startTimer();
+    _fetchQuestions();
+  }
+
+  Future<void> _fetchQuestions() async {
+    try {
+      final examId = widget.examData['id'];
+      if (examId == null) {
+        throw Exception('Exam ID is missing');
+      }
+
+      final response = await Supabase.instance.client
+          .from('exam_questions_link')
+          .select('order_index, question_bank(q, opts)')
+          .eq('exam_id', examId)
+          .order('order_index', ascending: true);
+
+      final List<Map<String, dynamic>> loadedQs = [];
+      for (var row in response as List<dynamic>) {
+        final qb = row['question_bank'];
+        if (qb != null) {
+          loadedQs.add({
+            'q': qb['q'],
+            'opts': List<String>.from(qb['opts'] ?? []),
+          });
+        }
+      }
+
+      setState(() {
+        questions = loadedQs;
+        isLoading = false;
+      });
+      _startTimer();
+    } catch (e) {
+      debugPrint('Error fetching questions: $e');
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('প্রশ্ন লোড করতে সমস্যা হয়েছে: $e')),
+      );
+    }
   }
 
   void _startTimer() {
@@ -84,9 +115,6 @@ class _QuizPageState extends State<QuizPage> {
 
   @override
   Widget build(BuildContext context) {
-    final question = questions[currentQuestionIndex];
-    final options = question['opts'] as List<String>;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.examData['title'] ?? 'মডেল টেস্ট'),
@@ -104,7 +132,19 @@ class _QuizPageState extends State<QuizPage> {
           )
         ],
       ),
-      body: Padding(
+      body: isLoading 
+        ? const Center(child: CircularProgressIndicator()) 
+        : questions.isEmpty 
+          ? const Center(child: Text('এই পরীক্ষায় কোনো প্রশ্ন পাওয়া যায়নি।'))
+          : _buildQuizContent(),
+    );
+  }
+
+  Widget _buildQuizContent() {
+    final question = questions[currentQuestionIndex];
+    final options = question['opts'] as List<String>;
+
+    return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -179,7 +219,6 @@ class _QuizPageState extends State<QuizPage> {
             )
           ],
         ),
-      ),
-    );
+      );
   }
 }
